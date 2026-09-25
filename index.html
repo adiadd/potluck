@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>potluck at adi's</title>
-<meta name="description" content="who's bringing what - saturday, october 3">
+<meta name="description" content="who's bringing what - sunday, october 4">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
@@ -126,6 +126,25 @@
   }
   .who::before { content: "— "; color: var(--line); }
 
+  .meta {
+    display: flex; flex-direction: column; align-items: flex-end; gap: 5px;
+  }
+  .acts { display: flex; gap: 12px; }
+  .acts button, .editrow .cancel {
+    width: auto; padding: 2px 0;
+    font: 500 11.5px 'Inter', sans-serif;
+    letter-spacing: 0.04em;
+    color: var(--ink-soft); background: none;
+    border-radius: 0; opacity: 0.75;
+  }
+  .acts button:hover, .editrow .cancel:hover { background: none; color: var(--accent); opacity: 1; }
+  .acts button.del:hover { color: var(--accent-deep); }
+
+  li.editrow { display: block; }
+  .editrow input { padding: 10px 12px; font-size: 16px; margin-bottom: 8px; }
+  .editrow .btns { display: flex; align-items: center; justify-content: flex-end; gap: 16px; }
+  .editrow .save { width: auto; padding: 9px 18px; font-size: 13.5px; border-radius: 999px; }
+
   .empty {
     text-align: center; padding: 36px 20px;
     color: var(--ink-soft); font-size: 14.5px; line-height: 1.6;
@@ -153,7 +172,7 @@
   <header>
     <div class="eyebrow">you're invited</div>
     <h1>potluck<br>at <em>adi's</em></h1>
-    <div class="when">saturday, october 3</div>
+    <div class="when">sunday, october 4</div>
   </header>
 
   <form class="card" id="dish-form" autocomplete="off">
@@ -174,11 +193,10 @@
   </div>
   <ul id="dishes"></ul>
   <div class="empty" id="empty">
-    <em>nothing claimed yet.</em><br>
-    be the first - the good dishes go fast.
+    <em>nothing claimed yet.</em>
   </div>
 
-  <footer>hosted with love · list updates live</footer>
+  <footer>pull up a chair 🪑</footer>
 </div>
 <div class="toast" id="toast"></div>
 
@@ -195,6 +213,8 @@ const form = document.getElementById('dish-form');
 const btn = document.getElementById('submit-btn');
 const toast = document.getElementById('toast');
 let toastTimer;
+let editingId = null;
+let lastRows = [];
 
 function showToast(msg) {
   toast.textContent = msg;
@@ -204,6 +224,8 @@ function showToast(msg) {
 }
 
 function render(rows) {
+  lastRows = rows;
+  if (editingId !== null) return;
   list.innerHTML = '';
   emptyState.style.display = rows.length ? 'none' : 'block';
   countEl.textContent = rows.length ? rows.length + (rows.length === 1 ? ' dish' : ' dishes') : '';
@@ -216,15 +238,80 @@ function render(rows) {
     const who = document.createElement('span');
     who.className = 'who';
     who.textContent = r.name;
-    li.append(dish, who);
+    const meta = document.createElement('div');
+    meta.className = 'meta';
+    const acts = document.createElement('div');
+    acts.className = 'acts';
+    const editBtn = document.createElement('button');
+    editBtn.type = 'button';
+    editBtn.textContent = 'edit';
+    editBtn.setAttribute('aria-label', 'edit ' + r.dish);
+    editBtn.onclick = () => startEdit(li, r);
+    const delBtn = document.createElement('button');
+    delBtn.type = 'button';
+    delBtn.className = 'del';
+    delBtn.textContent = 'remove';
+    delBtn.setAttribute('aria-label', 'remove ' + r.dish);
+    delBtn.onclick = () => removeRow(r);
+    acts.append(editBtn, delBtn);
+    meta.append(who, acts);
+    li.append(dish, meta);
     list.appendChild(li);
+  }
+}
+
+function startEdit(li, r) {
+  editingId = r.id;
+  li.className = 'row editrow';
+  li.innerHTML = '';
+  const dishIn = document.createElement('input');
+  dishIn.type = 'text'; dishIn.maxLength = 80; dishIn.value = r.dish;
+  dishIn.setAttribute('aria-label', 'dish');
+  const nameIn = document.createElement('input');
+  nameIn.type = 'text'; nameIn.maxLength = 40; nameIn.value = r.name;
+  nameIn.setAttribute('aria-label', 'name');
+  const btns = document.createElement('div');
+  btns.className = 'btns';
+  const cancel = document.createElement('button');
+  cancel.type = 'button'; cancel.className = 'cancel'; cancel.textContent = 'cancel';
+  cancel.onclick = () => { editingId = null; render(lastRows); };
+  const save = document.createElement('button');
+  save.type = 'button'; save.className = 'save'; save.textContent = 'save';
+  save.onclick = async () => {
+    const dish = dishIn.value.trim();
+    const name = nameIn.value.trim();
+    if (!dish || !name) return;
+    save.disabled = true;
+    const { error } = await sb.from('dishes').update({ dish, name }).eq('id', r.id);
+    if (error) {
+      save.disabled = false;
+      showToast('hmm, that didn\'t save - try again');
+    } else {
+      editingId = null;
+      showToast('updated');
+      load();
+    }
+  };
+  btns.append(cancel, save);
+  li.append(dishIn, nameIn, btns);
+  dishIn.focus();
+}
+
+async function removeRow(r) {
+  if (!confirm('remove ' + r.dish + ' (' + r.name + ')?')) return;
+  const { error } = await sb.from('dishes').delete().eq('id', r.id);
+  if (error) {
+    showToast('hmm, that didn\'t go through - try again');
+  } else {
+    showToast('removed');
+    load();
   }
 }
 
 async function load() {
   const { data, error } = await sb
     .from('dishes')
-    .select('name, dish, created_at')
+    .select('id, name, dish, created_at')
     .order('created_at', { ascending: true });
   if (!error) render(data || []);
 }
@@ -256,3 +343,4 @@ load();
 </script>
 </body>
 </html>
+
