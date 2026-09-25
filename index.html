@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>potluck at adi's</title>
+<meta name="description" content="who's bringing what - saturday, october 3">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #faf5ee;
+    --ink: #221c15;
+    --ink-soft: #6b5f52;
+    --accent: #b4501e;
+    --accent-deep: #8f3c14;
+    --line: #e4d9c8;
+    --card: #fffdf9;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Inter', -apple-system, sans-serif;
+    min-height: 100vh;
+    padding: 0 20px 80px;
+  }
+  .wrap { max-width: 460px; margin: 0 auto; }
+
+  header { text-align: center; padding: 64px 0 40px; }
+  .eyebrow {
+    font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase;
+    color: var(--accent); font-weight: 600; margin-bottom: 14px;
+  }
+  h1 {
+    font-family: 'Fraunces', Georgia, serif;
+    font-weight: 500; font-size: 44px; line-height: 1.05;
+    letter-spacing: -0.01em;
+  }
+  h1 em { font-style: italic; color: var(--accent); }
+  .when {
+    margin-top: 16px; font-size: 14px; color: var(--ink-soft);
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+  }
+  .when::before, .when::after {
+    content: ""; height: 1px; width: 28px; background: var(--line);
+  }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 24px 22px;
+    box-shadow: 0 1px 2px rgba(34,28,21,0.04), 0 8px 24px rgba(34,28,21,0.05);
+  }
+
+  .field { margin-bottom: 16px; }
+  label {
+    display: block; font-size: 12px; font-weight: 600;
+    letter-spacing: 0.06em; text-transform: uppercase;
+    color: var(--ink-soft); margin-bottom: 7px;
+  }
+  input {
+    width: 100%; padding: 13px 14px;
+    font: 16px 'Inter', sans-serif;
+    color: var(--ink);
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    -webkit-appearance: none;
+  }
+  input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(180,80,30,0.12);
+  }
+  input::placeholder { color: #b8a894; }
+
+  button {
+    width: 100%; padding: 14px;
+    font: 600 15px 'Inter', sans-serif;
+    color: var(--paper);
+    background: var(--accent);
+    border: none; border-radius: 10px;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.1s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  button:hover { background: var(--accent-deep); }
+  button:active { transform: scale(0.985); }
+  button:disabled { opacity: 0.55; cursor: default; transform: none; }
+
+  .listhead {
+    display: flex; align-items: baseline; justify-content: space-between;
+    margin: 44px 2px 14px;
+  }
+  .listhead h2 {
+    font-family: 'Fraunces', Georgia, serif;
+    font-weight: 500; font-size: 24px;
+  }
+  .count {
+    font-size: 12px; color: var(--ink-soft);
+    letter-spacing: 0.05em; text-transform: uppercase;
+  }
+
+  ul { list-style: none; }
+  li.row {
+    display: flex; align-items: baseline; gap: 12px;
+    padding: 15px 4px;
+    border-bottom: 1px solid var(--line);
+    animation: rise 0.35s ease both;
+  }
+  li.row:first-child { border-top: 1px solid var(--line); }
+  @keyframes rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; } }
+  .dish {
+    font-family: 'Fraunces', Georgia, serif;
+    font-size: 19px; font-weight: 500; line-height: 1.25;
+    flex: 1; word-break: break-word;
+  }
+  .who {
+    font-size: 12.5px; color: var(--ink-soft);
+    white-space: nowrap; letter-spacing: 0.02em;
+  }
+  .who::before { content: "— "; color: var(--line); }
+
+  .empty {
+    text-align: center; padding: 36px 20px;
+    color: var(--ink-soft); font-size: 14.5px; line-height: 1.6;
+  }
+  .empty em { font-family: 'Fraunces', serif; font-size: 17px; color: var(--ink); }
+
+  footer {
+    text-align: center; margin-top: 56px;
+    font-size: 12px; color: var(--ink-soft); opacity: 0.7;
+  }
+
+  .toast {
+    position: fixed; left: 50%; bottom: 28px;
+    transform: translateX(-50%) translateY(80px);
+    background: var(--ink); color: var(--paper);
+    font-size: 14px; padding: 12px 20px; border-radius: 999px;
+    transition: transform 0.3s cubic-bezier(0.2, 0.9, 0.3, 1.2);
+    pointer-events: none; z-index: 10;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">you're invited</div>
+    <h1>potluck<br>at <em>adi's</em></h1>
+    <div class="when">saturday, october 3</div>
+  </header>
+
+  <form class="card" id="dish-form" autocomplete="off">
+    <div class="field">
+      <label for="name">your name</label>
+      <input id="name" name="name" type="text" placeholder="who's coming" maxlength="40" required>
+    </div>
+    <div class="field">
+      <label for="dish">what you're bringing</label>
+      <input id="dish" name="dish" type="text" placeholder="biryani, wine, that one salad..." maxlength="80" required>
+    </div>
+    <button type="submit" id="submit-btn">add to the table</button>
+  </form>
+
+  <div class="listhead">
+    <h2>the table</h2>
+    <span class="count" id="count"></span>
+  </div>
+  <ul id="dishes"></ul>
+  <div class="empty" id="empty">
+    <em>nothing claimed yet.</em><br>
+    be the first - the good dishes go fast.
+  </div>
+
+  <footer>hosted with love · list updates live</footer>
+</div>
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
+const SUPABASE_URL = 'https://rpzytgiuwddksqktzllh.supabase.co';
+const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJwenl0Z2l1d2Rka3Nxa3R6bGxoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAyOTM5NzMsImV4cCI6MjEwNTg2OTk3M30.UBSpA8P58JAEDa4J9H7yhwUwcjz22MGRhSpOOHq37Qg';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
+const list = document.getElementById('dishes');
+const emptyState = document.getElementById('empty');
+const countEl = document.getElementById('count');
+const form = document.getElementById('dish-form');
+const btn = document.getElementById('submit-btn');
+const toast = document.getElementById('toast');
+let toastTimer;
+
+function showToast(msg) {
+  toast.textContent = msg;
+  toast.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toast.classList.remove('show'), 2600);
+}
+
+function render(rows) {
+  list.innerHTML = '';
+  emptyState.style.display = rows.length ? 'none' : 'block';
+  countEl.textContent = rows.length ? rows.length + (rows.length === 1 ? ' dish' : ' dishes') : '';
+  for (const r of rows) {
+    const li = document.createElement('li');
+    li.className = 'row';
+    const dish = document.createElement('span');
+    dish.className = 'dish';
+    dish.textContent = r.dish;
+    const who = document.createElement('span');
+    who.className = 'who';
+    who.textContent = r.name;
+    li.append(dish, who);
+    list.appendChild(li);
+  }
+}
+
+async function load() {
+  const { data, error } = await sb
+    .from('dishes')
+    .select('name, dish, created_at')
+    .order('created_at', { ascending: true });
+  if (!error) render(data || []);
+}
+
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const name = form.name.value.trim();
+  const dish = form.dish.value.trim();
+  if (!name || !dish) return;
+  btn.disabled = true;
+  const { error } = await sb.from('dishes').insert({ name, dish });
+  btn.disabled = false;
+  if (error) {
+    showToast('hmm, that didn\'t save - try again');
+  } else {
+    form.dish.value = '';
+    showToast('you\'re on the table');
+    load();
+  }
+});
+
+// live updates: realtime with a quiet polling fallback
+sb.channel('dishes-live')
+  .on('postgres_changes', { event: '*', schema: 'public', table: 'dishes' }, load)
+  .subscribe();
+setInterval(load, 20000);
+
+load();
+</script>
+</body>
+</html>
