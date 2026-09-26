@@ -145,6 +145,35 @@
   .editrow .btns { display: flex; align-items: center; justify-content: flex-end; gap: 16px; }
   .editrow .save { width: auto; padding: 9px 18px; font-size: 13.5px; border-radius: 999px; }
 
+  .loading {
+    display: flex; flex-direction: column; align-items: center; gap: 14px;
+    padding: 40px 20px 36px;
+  }
+  .loading-art { width: 72px; height: auto; }
+  .loading-art .steam {
+    fill: none; stroke: var(--accent); stroke-width: 2.4;
+    stroke-linecap: round; opacity: 0;
+    animation: steam 1.8s ease-in-out infinite;
+  }
+  .loading-art .s2 { animation-delay: 0.3s; }
+  .loading-art .s3 { animation-delay: 0.6s; }
+  .loading-art .bowl {
+    fill: none; stroke: var(--ink); stroke-width: 2.4; stroke-linecap: round;
+  }
+  .loading-art .bowl-base { fill: var(--line); stroke: none; }
+  @keyframes steam {
+    0%   { opacity: 0; transform: translateY(4px); }
+    35%  { opacity: 0.9; }
+    100% { opacity: 0; transform: translateY(-5px); }
+  }
+  .loading-text {
+    font-family: 'Fraunces', Georgia, serif; font-style: italic;
+    font-size: 16px; color: var(--ink-soft);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .loading-art .steam { animation: none; opacity: 0.9; }
+  }
+
   .empty {
     text-align: center; padding: 36px 20px;
     color: var(--ink-soft); font-size: 14.5px; line-height: 1.6;
@@ -191,8 +220,19 @@
     <h2>the table</h2>
     <span class="count" id="count"></span>
   </div>
+  <div class="loading" id="loading" role="status" aria-live="polite">
+    <svg class="loading-art" viewBox="0 0 72 46" aria-hidden="true">
+      <path class="steam s1" d="M28 20 C26.5 16, 29.5 14, 28 10"/>
+      <path class="steam s2" d="M36 21 C34.5 16, 37.5 14, 36 8"/>
+      <path class="steam s3" d="M44 20 C42.5 16, 45.5 14, 44 10"/>
+      <ellipse class="bowl-base" cx="36" cy="42" rx="14" ry="2.2"/>
+      <path class="bowl" d="M18 29 a18 11 0 0 0 36 0"/>
+      <path class="bowl" d="M14 29 h44"/>
+    </svg>
+    <div class="loading-text">setting the table&hellip;</div>
+  </div>
   <ul id="dishes"></ul>
-  <div class="empty" id="empty">
+  <div class="empty" id="empty" style="display:none">
     <em>nothing claimed yet.</em>
   </div>
 
@@ -207,6 +247,7 @@ const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFz
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
 
 const list = document.getElementById('dishes');
+const loading = document.getElementById('loading');
 const emptyState = document.getElementById('empty');
 const countEl = document.getElementById('count');
 const form = document.getElementById('dish-form');
@@ -308,12 +349,21 @@ async function removeRow(r) {
   }
 }
 
+let firstLoad = true;
 async function load() {
   const { data, error } = await sb
     .from('dishes')
     .select('id, name, dish, created_at')
     .order('created_at', { ascending: true });
-  if (!error) render(data || []);
+  if (!error) {
+    if (firstLoad) { firstLoad = false; loading.style.display = 'none'; }
+    render(data || []);
+  } else if (firstLoad) {
+    firstLoad = false;
+    loading.style.display = 'none';
+    render([]);
+    showToast('hmm, the table didn\'t load - try refreshing');
+  }
 }
 
 form.addEventListener('submit', async (e) => {
